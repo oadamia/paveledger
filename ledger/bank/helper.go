@@ -1,4 +1,4 @@
-package ledger
+package bank
 
 import tb_types "github.com/tigerbeetledb/tigerbeetle-go/pkg/types"
 
