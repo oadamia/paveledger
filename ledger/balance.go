@@ -3,15 +3,14 @@ package ledger
 import (
 	"context"
 	"errors"
-	"log"
 
 	tb_types "github.com/tigerbeetledb/tigerbeetle-go/pkg/types"
 )
 
 type BalanceResponse struct {
-	AccountID string `json:"account_id"`
-	Available uint64 `json:"availabe"`
-	Balance   uint64 `json:"balance"`
+	AccountID        string `json:"account_id"`
+	AvailableBalance uint64 `json:"availabe_balance"`
+	AccountBalance   uint64 `json:"account_balance"`
 }
 
 // GetBalance get balance information from Database
@@ -20,7 +19,6 @@ type BalanceResponse struct {
 func (s *Service) GetBalance(ctx context.Context, accountID string) (*BalanceResponse, error) {
 	accounts, err := s.client.LookupAccounts([]tb_types.Uint128{uint128(accountID)})
 	if err != nil {
-		log.Printf("Could not fetch accounts: %s", err)
 		return nil, err
 	}
 
@@ -28,27 +26,26 @@ func (s *Service) GetBalance(ctx context.Context, accountID string) (*BalanceRes
 		return nil, nil
 	}
 
-	balance, availableBalance, err := calculateBalance(accounts[0])
+	accountBalance, availableBalance, err := calculateBalance(accounts[0])
 	if err != nil {
-		log.Printf("Could not calculate balance: %s", err)
 		return nil, err
 	}
 
 	return &BalanceResponse{
-		AccountID: accounts[0].ID.String(),
-		Available: availableBalance,
-		Balance:   balance}, nil
+		AccountID:        accounts[0].ID.String(),
+		AvailableBalance: availableBalance,
+		AccountBalance:   accountBalance}, nil
 }
 
-func calculateBalance(account tb_types.Account) (balance, availableBalance uint64, err error) {
+func calculateBalance(account tb_types.Account) (accountBalance, availableBalance uint64, err error) {
 
-	if checkFlag(account.Flags, CreditsMustNotExceedDebitsFlag()) {
+	if check(account.Flags, isCreditBalanceFlag()) {
 		availableBalance = account.DebitsPosted - account.CreditsPosted
-		balance = availableBalance + account.DebitsPending
+		accountBalance = availableBalance + account.DebitsPending
 		return
-	} else if checkFlag(account.Flags, DebitsMustNotExceedCreditsFlag()) {
+	} else if check(account.Flags, isDebitBalanceFlag()) {
 		availableBalance = account.CreditsPosted - account.DebitsPosted
-		balance = availableBalance + account.CreditsPending
+		accountBalance = availableBalance + account.CreditsPending
 		return
 	}
 
