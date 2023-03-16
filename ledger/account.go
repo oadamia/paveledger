@@ -7,6 +7,7 @@ import (
 	tb_types "github.com/tigerbeetledb/tigerbeetle-go/pkg/types"
 )
 
+// Account representation
 type AccountRepr struct {
 	ID              string `json:"account_id"`
 	Ledger          uint32 `json:"ledger"`
@@ -30,18 +31,18 @@ func (s *Service) GetAccount(ctx context.Context, accountID string) (*AccountRep
 	}
 
 	return accountReprFrom(accounts[0]), nil
-
 }
 
 // CreateAccount adds a new account to the list of accounts.
 //
 //encore:api public method=POST path=/accounts
-func (s *Service) CreateAccount(ctx context.Context, cap *AccountRepr) error {
-	if cap.IsCreditBalance == cap.IsDebitBalance {
-		return errors.New("credit and debit balance flag is equal")
+func (s *Service) CreateAccount(ctx context.Context, a *AccountRepr) error {
+	err := validateAccount(*a)
+	if err != nil {
+		return err
 	}
 
-	res, err := s.client.CreateAccounts([]tb_types.Account{accountFrom(*cap)})
+	res, err := s.client.CreateAccounts([]tb_types.Account{accountFrom(*a)})
 	if err != nil {
 		return err
 	}
@@ -50,6 +51,13 @@ func (s *Service) CreateAccount(ctx context.Context, cap *AccountRepr) error {
 		return errors.New(res[0].Result.String())
 	}
 
+	return nil
+}
+
+func validateAccount(a AccountRepr) error {
+	if a.IsCreditBalance == a.IsDebitBalance {
+		return errors.New("credit and debit balance flag is equal")
+	}
 	return nil
 }
 
@@ -64,17 +72,17 @@ func accountReprFrom(a tb_types.Account) *AccountRepr {
 	}
 }
 
-func accountFrom(cap AccountRepr) tb_types.Account {
+func accountFrom(a AccountRepr) tb_types.Account {
 	flag := tb_types.AccountFlags{
-		Linked:                     cap.IsLinked,
-		DebitsMustNotExceedCredits: cap.IsDebitBalance,
-		CreditsMustNotExceedDebits: cap.IsCreditBalance,
+		Linked:                     a.IsLinked,
+		DebitsMustNotExceedCredits: a.IsDebitBalance,
+		CreditsMustNotExceedDebits: a.IsCreditBalance,
 	}
 
 	return tb_types.Account{
-		ID:     uint128(cap.ID),
-		Ledger: cap.Ledger,
-		Code:   cap.Code,
+		ID:     uint128(a.ID),
+		Ledger: a.Ledger,
+		Code:   a.Code,
 		Flags:  flag.ToUint16(),
 	}
 }
