@@ -10,37 +10,13 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-type authList struct {
-	Items []model.Authorization
-}
-
-func (l *authList) Add(item model.Authorization) {
-	l.Items = append(l.Items, item)
-}
-
-func (l *authList) Pop() *model.Authorization {
-	if len(l.Items) == 0 {
-		return nil
-	}
-
-	a := l.Items[0]
-	l.Items = l.Items[1:]
-	return &a
-}
-
 const AuthorizationTimeout = 100 * time.Second
 
-func AutorizeWorkflow(ctx workflow.Context, alist authList) error {
+func AutorizeWorkflow(ctx workflow.Context, list model.AuthorizationList) error {
 	logger := workflow.GetLogger(ctx)
-	err := workflow.SetQueryHandler(ctx, "authorize", func(input []byte) (authList, error) {
-		return alist, nil
-	})
-	if err != nil {
-		return err
-	}
 
-	authorizeChannel := workflow.GetSignalChannel(ctx, model.SignalChannels.AUTHORIZATION_CHANNEL)
-	presentmentChannel := workflow.GetSignalChannel(ctx, model.SignalChannels.PRESENTMENT_CHANNEL)
+	authorizeChannel := workflow.GetSignalChannel(ctx, AUTHORIZATION_CHANNEL)
+	presentmentChannel := workflow.GetSignalChannel(ctx, PRESENTMENT_CHANNEL)
 
 	var l *ledger.Ledger
 
@@ -57,19 +33,7 @@ func AutorizeWorkflow(ctx workflow.Context, alist authList) error {
 				return
 			}
 
-			ao := workflow.ActivityOptions{
-				StartToCloseTimeout: time.Minute,
-			}
-
-			ctx = workflow.WithActivityOptions(ctx, ao)
-
-			err = workflow.ExecuteActivity(ctx, l.AddPendingTransfer, auth).Get(ctx, &auth.PendingID)
-			if err != nil {
-				logger.Error("Error creating stripe charge: %v", err)
-				return
-			}
-
-			alist.Add(auth)
+			list.Add(auth)
 		})
 
 		selector.AddReceive(presentmentChannel, func(c workflow.ReceiveChannel, _ bool) {
@@ -77,63 +41,54 @@ func AutorizeWorkflow(ctx workflow.Context, alist authList) error {
 			c.Receive(ctx, &signal)
 
 			var pre model.Presentment
+			var auth *model.Authorization
 			err := mapstructure.Decode(signal, &pre)
 			if err != nil {
 				logger.Error("Invalid signal type %v", err)
 				return
 			}
+
+			auth = list.Pop()
+			if auth != nil {
+				pre.PendingID = auth.PendingID
+			}
+
+			ao := workflow.ActivityOptions{
+				StartToCloseTimeout: time.Minute,
+			}
+
+			ctx = workflow.WithActivityOptions(ctx, ao)
+
+			err = workflow.ExecuteActivity(ctx, l.AddPostPendingTransfer, pre).Get(ctx, nil)
+			if err != nil {
+				logger.Error("Error adding pending transfer: %v", err)
+				return
+			}
 		})
 
-		// selector.AddReceive(checkoutChannel, func(c workflow.ReceiveChannel, _ bool) {
-		// 	var signal interface{}
-		// 	c.Receive(ctx, &signal)
+		if len(list.Items) > 0 {
+			selector.AddFuture(workflow.NewTimer(ctx, authorizationTimeout), func(f workflow.Future) {
 
-		// 	var message CheckoutSignal
-		// 	err := mapstructure.Decode(signal, &message)
-		// 	if err != nil {
-		// 		logger.Error("Invalid signal type %v", err)
-		// 		return
-		// 	}
+				auth := list.Pop()
+				ao := workflow.ActivityOptions{
+					StartToCloseTimeout: time.Minute,
+				}
 
-		// 	alist.Email = message.Email
+				ctx = workflow.WithActivityOptions(ctx, ao)
 
-		// 	ao := workflow.ActivityOptions{
-		// 		StartToCloseTimeout: time.Minute,
-		// 	}
+				err := workflow.ExecuteActivity(ctx, l.AddVoidPendingTransfer, auth).Get(ctx, nil)
+				if err != nil {
+					logger.Error("Error sending email %v", err)
+					return
+				}
+			})
+		}
 
-		// 	ctx = workflow.WithActivityOptions(ctx, ao)
+		selector.Select(ctx)
 
-		// 	err = workflow.ExecuteActivity(ctx, a.CreateStripeCharge, alist).Get(ctx, nil)
-		// 	if err != nil {
-		// 		logger.Error("Error creating stripe charge: %v", err)
-		// 		return
-		// 	}
-
-		// 	checkedOut = true
-		// })
-
-		// if !sentAbandonedCartEmail && len(alist.Items) > 0 {
-		// 	selector.AddFuture(workflow.NewTimer(ctx, abandonedCartTimeout), func(f workflow.Future) {
-		// 		sentAbandonedCartEmail = true
-		// 		ao := workflow.ActivityOptions{
-		// 			StartToCloseTimeout: time.Minute,
-		// 		}
-
-		// 		ctx = workflow.WithActivityOptions(ctx, ao)
-
-		// 		err := workflow.ExecuteActivity(ctx, a.SendAbandonedCartEmail, alist.Email).Get(ctx, nil)
-		// 		if err != nil {
-		// 			logger.Error("Error sending email %v", err)
-		// 			return
-		// 		}
-		// 	})
-		// }
-
-		// selector.Select(ctx)
-
-		// if checkedOut {
-		// 	break
-		// }
+		if list.IsEmpty() {
+			break
+		}
 	}
 
 	return nil

@@ -8,13 +8,11 @@ import (
 	"go.temporal.io/sdk/worker"
 )
 
-const taskQueue = "authorization"
-
 //encore:service
 type Service struct {
-	ledger     *ledger.Ledger
-	tempClient client.Client
-	tempWorker worker.Worker
+	ledger *ledger.Ledger
+	client client.Client
+	worker worker.Worker
 }
 
 // initService initializes the site service.
@@ -30,18 +28,19 @@ func initService() (*Service, error) {
 		return nil, err
 	}
 
-	w := worker.New(c, taskQueue, worker.Options{})
-	w.RegisterActivity(s.AddAccount)
+	w := worker.New(c, TASK_QUEUE, worker.Options{})
+	w.RegisterWorkflow(AutorizeWorkflow)
+	w.RegisterActivity(s.AddPendingTransfer)
 	err = w.Start()
 	if err != nil {
 		c.Close()
 		return nil, err
 	}
-	return &Service{ledger: s, tempClient: c, tempWorker: w}, nil
+	return &Service{ledger: s, client: c, worker: w}, nil
 }
 
 func (s *Service) Shutdown(force context.Context) {
 	s.ledger.Close()
-	s.tempClient.Close()
-	s.tempWorker.Stop()
+	s.client.Close()
+	s.worker.Stop()
 }

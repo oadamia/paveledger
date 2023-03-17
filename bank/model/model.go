@@ -32,19 +32,34 @@ type Transfer struct {
 type Authorization struct {
 	AccountID string `json:"account_id"`
 	Amount    uint64 `json:"amount"`
-	Timestamp uint64
+	Timestamp int64
 	PendingID string
 }
 
 type Presentment struct {
 	AccountID string `json:"account_id"`
 	Amount    uint64 `json:"amount"`
+	PendingID string
 }
 
-var SignalChannels = struct {
-	AUTHORIZATION_CHANNEL string
-	PRESENTMENT_CHANNEL   string
-}{
-	AUTHORIZATION_CHANNEL: "AUTHORIZATION_CHANNEL",
-	PRESENTMENT_CHANNEL:   "PRESENTMENT_CHANNEL",
+type AuthorizationList struct {
+	Items []Authorization
+}
+
+func (l *AuthorizationList) Add(item Authorization) {
+	l.Items = append(l.Items, item)
+}
+
+func (l *AuthorizationList) Pop() *Authorization {
+	if len(l.Items) == 0 {
+		return nil
+	}
+
+	a := l.Items[0]
+	l.Items = l.Items[1:]
+	return &a
+}
+
+func (l *AuthorizationList) IsEmpty() bool {
+	return len(l.Items) == 0
 }

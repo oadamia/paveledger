@@ -58,6 +58,76 @@ func pendingTransfer(a model.Authorization) tb_types.Transfer {
 	}
 }
 
+func (l *Ledger) AddPostPendingTransfer(ctx context.Context, p *model.Presentment) error {
+	ppt := postPendingTransfer(*p)
+
+	res, err := l.client.CreateTransfers([]tb_types.Transfer{ppt})
+	if err != nil {
+		return err
+	}
+
+	if len(res) > 0 && res[0].Result != tb_types.TransferOK {
+		return errors.New(res[0].Result.String())
+	}
+
+	return nil
+}
+
+func postPendingTransfer(p model.Presentment) tb_types.Transfer {
+	flag := tb_types.TransferFlags{
+		Linked:              false,
+		Pending:             false,
+		PostPendingTransfer: true,
+		VoidPendingTransfer: false,
+	}
+
+	return tb_types.Transfer{
+		ID:              uint128(generateTransactionID("T", 3)),
+		DebitAccountID:  uint128(cardAccountID),
+		CreditAccountID: uint128(p.AccountID),
+		PendingID:       uint128(p.PendingID),
+		Ledger:          defaultLedgerID,
+		Code:            defaultCode,
+		Amount:          p.Amount,
+		Flags:           flag.ToUint16(),
+	}
+}
+
+func (l *Ledger) AddVoidPendingTransfer(ctx context.Context, p *model.Authorization) error {
+	ppt := voidPendingTransfer(*p)
+
+	res, err := l.client.CreateTransfers([]tb_types.Transfer{ppt})
+	if err != nil {
+		return err
+	}
+
+	if len(res) > 0 && res[0].Result != tb_types.TransferOK {
+		return errors.New(res[0].Result.String())
+	}
+
+	return nil
+}
+
+func voidPendingTransfer(p model.Authorization) tb_types.Transfer {
+	flag := tb_types.TransferFlags{
+		Linked:              false,
+		Pending:             false,
+		PostPendingTransfer: true,
+		VoidPendingTransfer: false,
+	}
+
+	return tb_types.Transfer{
+		ID:              uint128(generateTransactionID("T", 3)),
+		DebitAccountID:  uint128(cardAccountID),
+		CreditAccountID: uint128(p.AccountID),
+		PendingID:       uint128(p.PendingID),
+		Ledger:          defaultLedgerID,
+		Code:            defaultCode,
+		Amount:          p.Amount,
+		Flags:           flag.ToUint16(),
+	}
+}
+
 func tbTransferFrom(t model.Transfer) tb_types.Transfer {
 	flag := tb_types.TransferFlags{
 		Linked:              t.IsLinked,
