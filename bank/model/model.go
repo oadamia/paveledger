@@ -30,10 +30,10 @@ type Transfer struct {
 }
 
 type Authorization struct {
-	AccountID  string `json:"account_id"`
-	Amount     uint64 `json:"amount"`
-	Timestamp  uint64
-	TransferID string
+	AccountID string `json:"account_id"`
+	Amount    uint64 `json:"amount"`
+	Timestamp uint64
+	PendingID string
 }
 
 type Presentment struct {

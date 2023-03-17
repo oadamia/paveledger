@@ -63,7 +63,7 @@ func AutorizeWorkflow(ctx workflow.Context, alist authList) error {
 
 			ctx = workflow.WithActivityOptions(ctx, ao)
 
-			err = workflow.ExecuteActivity(ctx, l.AddPendingTransfer, auth).Get(ctx, nil)
+			err = workflow.ExecuteActivity(ctx, l.AddPendingTransfer, auth).Get(ctx, &auth.PendingID)
 			if err != nil {
 				logger.Error("Error creating stripe charge: %v", err)
 				return

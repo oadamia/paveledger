@@ -6,6 +6,13 @@ import (
 	tb "github.com/tigerbeetledb/tigerbeetle-go"
 )
 
+const (
+	bankAccountID   = "3"
+	cardAccountID   = "6"
+	defaultLedgerID = 1
+	defaultCode     = 1
+)
+
 type Ledger struct {
 	client tb.Client
 }
