@@ -19,11 +19,11 @@ func setFlag(flag, bitmsak uint16) uint16 {
 }
 
 func isDebitBalanceFlag() uint16 {
-	return tb_types.AccountFlags{DebitsMustNotExceedCredits: true}.ToUint16()
+	return tb_types.AccountFlags{CreditsMustNotExceedDebits: true}.ToUint16()
 }
 
 func isCreditBalanceFlag() uint16 {
-	return tb_types.AccountFlags{CreditsMustNotExceedDebits: true}.ToUint16()
+	return tb_types.AccountFlags{DebitsMustNotExceedCredits: true}.ToUint16()
 }
 
 func isLinkedFlag() uint16 {

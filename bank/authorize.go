@@ -40,7 +40,7 @@ func (s *Service) CreateAuthorization(ctx context.Context, auth *model.Authoriza
 	}
 
 	auth.Timestamp = time.Now().Unix()
-	return s.client.SignalWorkflow(context.Background(), workflowID, "", PRESENTMENT_CHANNEL, auth)
+	return s.client.SignalWorkflow(context.Background(), workflowID, "", AUTHORIZATION_CHANNEL, auth)
 }
 
 func (s *Service) checkBalance(ctx context.Context, ID string, amount uint64) error {

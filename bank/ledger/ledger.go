@@ -8,7 +8,7 @@ import (
 
 const (
 	bankAccountID   = "3"
-	cardAccountID   = "6"
+	cardAccountID   = "100"
 	defaultLedgerID = 1
 	defaultCode     = 1
 )

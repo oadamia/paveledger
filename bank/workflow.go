@@ -32,7 +32,7 @@ func AutorizeWorkflow(ctx workflow.Context, list model.AuthorizationList) error 
 				logger.Error("Invalid signal type %v", err)
 				return
 			}
-
+			logger.Info("add auth")
 			list.Add(auth)
 		})
 

@@ -42,14 +42,18 @@ func accountFrom(a tb_types.Account) *model.Account {
 		IsLinked:        check(a.Flags, isLinkedFlag()),
 		IsDebitBalance:  check(a.Flags, isDebitBalanceFlag()),
 		IsCreditBalance: check(a.Flags, isCreditBalanceFlag()),
+		DebitsPending:   a.DebitsPending,
+		DebitsPosted:    a.DebitsPosted,
+		CreditsPending:  a.CreditsPending,
+		CreditsPosted:   a.CreditsPosted,
 	}
 }
 
 func tbAccountFrom(a model.Account) tb_types.Account {
 	flag := tb_types.AccountFlags{
 		Linked:                     a.IsLinked,
-		DebitsMustNotExceedCredits: a.IsDebitBalance,
-		CreditsMustNotExceedDebits: a.IsCreditBalance,
+		DebitsMustNotExceedCredits: a.IsCreditBalance,
+		CreditsMustNotExceedDebits: a.IsDebitBalance,
 	}
 
 	return tb_types.Account{

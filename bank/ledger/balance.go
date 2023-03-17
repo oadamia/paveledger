@@ -32,12 +32,13 @@ func (l *Ledger) GetBalance(ctx context.Context, accountID string) (*model.Balan
 func calculateBalance(account tb_types.Account) (accountBalance, availableBalance uint64, err error) {
 
 	if check(account.Flags, isCreditBalanceFlag()) {
-		availableBalance = account.DebitsPosted - account.CreditsPosted
-		accountBalance = availableBalance + account.DebitsPending
+		accountBalance = account.CreditsPosted - account.DebitsPosted
+		availableBalance = accountBalance - account.DebitsPending
+
 		return
 	} else if check(account.Flags, isDebitBalanceFlag()) {
-		availableBalance = account.CreditsPosted - account.DebitsPosted
-		accountBalance = availableBalance + account.CreditsPending
+		accountBalance = account.DebitsPosted - account.CreditsPosted
+		availableBalance = accountBalance - account.DebitsPending
 		return
 	}
 

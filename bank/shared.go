@@ -20,4 +20,4 @@ const (
 	PRESENTMENT_CHANNEL   = "PRESENTMENT_CHANNEL"
 )
 
-const authorizationTimeout = 30 * time.Second
+const authorizationTimeout = 10 * time.Second

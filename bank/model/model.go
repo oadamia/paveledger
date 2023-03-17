@@ -7,6 +7,10 @@ type Account struct {
 	IsLinked        bool   `json:"is_linked"`
 	IsDebitBalance  bool   `json:"is_debit_balance"`
 	IsCreditBalance bool   `json:"is_credit_balance"`
+	DebitsPending   uint64 `json:"debits_pending"`
+	DebitsPosted    uint64 `json:"debits_posted"`
+	CreditsPending  uint64 `json:"credits_pending"`
+	CreditsPosted   uint64 `json:"credits_posted"`
 }
 
 type Balance struct {

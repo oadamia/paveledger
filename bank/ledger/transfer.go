@@ -47,8 +47,8 @@ func pendingTransfer(a model.Authorization) tb_types.Transfer {
 
 	return tb_types.Transfer{
 		ID:              uint128(generateTransactionID(3)),
-		DebitAccountID:  uint128(cardAccountID),
-		CreditAccountID: uint128(a.AccountID),
+		DebitAccountID:  uint128(a.AccountID),
+		CreditAccountID: uint128(cardAccountID),
 		PendingID:       uint128("0"),
 		Ledger:          defaultLedgerID,
 		Code:            defaultCode,
@@ -82,8 +82,8 @@ func postPendingTransfer(p model.Presentment) tb_types.Transfer {
 
 	return tb_types.Transfer{
 		ID:              uint128(generateTransactionID(3)),
-		DebitAccountID:  uint128(cardAccountID),
-		CreditAccountID: uint128(p.AccountID),
+		DebitAccountID:  uint128(p.AccountID),
+		CreditAccountID: uint128(cardAccountID),
 		PendingID:       uint128(p.PendingID),
 		Ledger:          defaultLedgerID,
 		Code:            defaultCode,
@@ -117,8 +117,8 @@ func voidPendingTransfer(a model.Authorization) tb_types.Transfer {
 
 	return tb_types.Transfer{
 		ID:              uint128(generateTransactionID(3)),
-		DebitAccountID:  uint128(cardAccountID),
-		CreditAccountID: uint128(a.AccountID),
+		DebitAccountID:  uint128(a.AccountID),
+		CreditAccountID: uint128(cardAccountID),
 		PendingID:       uint128(a.PendingID),
 		Ledger:          defaultLedgerID,
 		Code:            defaultCode,
