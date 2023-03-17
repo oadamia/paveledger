@@ -23,19 +23,18 @@ func (l *Ledger) AddTransfer(ctx context.Context, t *model.Transfer) error {
 }
 
 func (l *Ledger) AddPendingTransfer(ctx context.Context, a *model.Authorization) (string, error) {
-	a.PendingID = generateTransactionID("P", 3)
 	pt := pendingTransfer(*a)
 
 	res, err := l.client.CreateTransfers([]tb_types.Transfer{pt})
 	if err != nil {
-		return a.PendingID, err
+		return "", err
 	}
 
 	if len(res) > 0 && res[0].Result != tb_types.TransferOK {
 		return a.PendingID, errors.New(res[0].Result.String())
 	}
 
-	return a.PendingID, nil
+	return pt.ID.String(), nil
 }
 
 func pendingTransfer(a model.Authorization) tb_types.Transfer {
@@ -47,10 +46,10 @@ func pendingTransfer(a model.Authorization) tb_types.Transfer {
 	}
 
 	return tb_types.Transfer{
-		ID:              uint128(generateTransactionID("T", 3)),
+		ID:              uint128(generateTransactionID(3)),
 		DebitAccountID:  uint128(cardAccountID),
 		CreditAccountID: uint128(a.AccountID),
-		PendingID:       uint128(a.PendingID),
+		PendingID:       uint128("0"),
 		Ledger:          defaultLedgerID,
 		Code:            defaultCode,
 		Amount:          a.Amount,
@@ -82,7 +81,7 @@ func postPendingTransfer(p model.Presentment) tb_types.Transfer {
 	}
 
 	return tb_types.Transfer{
-		ID:              uint128(generateTransactionID("T", 3)),
+		ID:              uint128(generateTransactionID(3)),
 		DebitAccountID:  uint128(cardAccountID),
 		CreditAccountID: uint128(p.AccountID),
 		PendingID:       uint128(p.PendingID),
@@ -108,22 +107,22 @@ func (l *Ledger) AddVoidPendingTransfer(ctx context.Context, p *model.Authorizat
 	return nil
 }
 
-func voidPendingTransfer(p model.Authorization) tb_types.Transfer {
+func voidPendingTransfer(a model.Authorization) tb_types.Transfer {
 	flag := tb_types.TransferFlags{
 		Linked:              false,
 		Pending:             false,
-		PostPendingTransfer: true,
-		VoidPendingTransfer: false,
+		PostPendingTransfer: false,
+		VoidPendingTransfer: true,
 	}
 
 	return tb_types.Transfer{
-		ID:              uint128(generateTransactionID("T", 3)),
+		ID:              uint128(generateTransactionID(3)),
 		DebitAccountID:  uint128(cardAccountID),
-		CreditAccountID: uint128(p.AccountID),
-		PendingID:       uint128(p.PendingID),
+		CreditAccountID: uint128(a.AccountID),
+		PendingID:       uint128(a.PendingID),
 		Ledger:          defaultLedgerID,
 		Code:            defaultCode,
-		Amount:          p.Amount,
+		Amount:          a.Amount,
 		Flags:           flag.ToUint16(),
 	}
 }
@@ -137,7 +136,7 @@ func tbTransferFrom(t model.Transfer) tb_types.Transfer {
 	}
 
 	return tb_types.Transfer{
-		ID:              uint128(t.ID),
+		ID:              uint128(generateTransactionID(3)),
 		DebitAccountID:  uint128(t.DebitAccountID),
 		CreditAccountID: uint128(t.CreditAccountID),
 		PendingID:       uint128(t.PendingID),
@@ -148,11 +147,11 @@ func tbTransferFrom(t model.Transfer) tb_types.Transfer {
 	}
 }
 
-func generateTransactionID(prefix string, length int) string {
+func generateTransactionID(length int) string {
 	randChars := make([]byte, length)
 	for i := range randChars {
 		allowedChars := "0123456789"
 		randChars[i] = allowedChars[rand.Intn(len(allowedChars))]
 	}
-	return prefix + string(randChars)
+	return string(randChars)
 }

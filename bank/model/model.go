@@ -16,17 +16,16 @@ type Balance struct {
 }
 
 type Transfer struct {
-	ID              string `json:"trasnfer_id"`
 	DebitAccountID  string `json:"debit_account_id"`
 	CreditAccountID string `json:"credit_account_id"`
-	PendingID       string `json:"pending_id"`
+	PendingID       string `json:"pending_id" default:"0"`
 	Ledger          uint32 `json:"ledger"`
 	Code            uint16 `json:"code"`
 	Amount          uint64 `json:"amount"`
-	IsLinked        bool   `json:"is_linked"`
-	IsPending       bool   `json:"is_pending_trasnfer"`
-	IsPostPending   bool   `json:"is_post_pending_id"`
-	IsVoidPending   bool   `json:"is_void_pending_id"`
+	IsLinked        bool   `json:"is_linked" default:"false"`
+	IsPending       bool   `json:"is_pending_trasnfer" default:"false"`
+	IsPostPending   bool   `json:"is_post_pending_id" default:"false"`
+	IsVoidPending   bool   `json:"is_void_pending_id" default:"false"`
 }
 
 type Authorization struct {

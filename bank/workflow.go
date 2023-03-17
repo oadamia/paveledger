@@ -48,16 +48,16 @@ func AutorizeWorkflow(ctx workflow.Context, list model.AuthorizationList) error 
 				return
 			}
 
-			auth = list.Pop()
-			if auth != nil {
-				pre.PendingID = auth.PendingID
-			}
-
 			ao := workflow.ActivityOptions{
 				StartToCloseTimeout: time.Minute,
 			}
 
 			ctx = workflow.WithActivityOptions(ctx, ao)
+
+			if !list.IsEmpty() {
+				auth = list.Pop()
+				pre.PendingID = auth.PendingID
+			}
 
 			err = workflow.ExecuteActivity(ctx, l.AddPostPendingTransfer, pre).Get(ctx, nil)
 			if err != nil {

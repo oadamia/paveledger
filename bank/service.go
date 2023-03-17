@@ -30,7 +30,9 @@ func initService() (*Service, error) {
 
 	w := worker.New(c, TASK_QUEUE, worker.Options{})
 	w.RegisterWorkflow(AutorizeWorkflow)
-	w.RegisterActivity(s.AddPendingTransfer)
+	w.RegisterActivity(s.AddPostPendingTransfer)
+	w.RegisterActivity(s.AddVoidPendingTransfer)
+
 	err = w.Start()
 	if err != nil {
 		c.Close()
