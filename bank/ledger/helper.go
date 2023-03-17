@@ -14,10 +14,6 @@ func check(flag, bitmask uint16) bool {
 	return flag&bitmask != 0
 }
 
-func setFlag(flag, bitmsak uint16) uint16 {
-	return flag | bitmsak
-}
-
 func isDebitBalanceFlag() uint16 {
 	return tb_types.AccountFlags{CreditsMustNotExceedDebits: true}.ToUint16()
 }
