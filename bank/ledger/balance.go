@@ -1,20 +1,15 @@
-package bank
+package ledger
 
 import (
 	"context"
 	"errors"
 
+	"encore.app/bank/model"
 	tb_types "github.com/tigerbeetledb/tigerbeetle-go/pkg/types"
 )
 
-type Balance struct {
-	AccountID        string `json:"account_id"`
-	AvailableBalance uint64 `json:"availabe_balance"`
-	AccountBalance   uint64 `json:"account_balance"`
-}
-
-func (b *Bank) GetBalance(ctx context.Context, accountID string) (*Balance, error) {
-	accounts, err := b.tbClient.LookupAccounts([]tb_types.Uint128{uint128(accountID)})
+func (l *Ledger) GetBalance(ctx context.Context, accountID string) (*model.Balance, error) {
+	accounts, err := l.client.LookupAccounts([]tb_types.Uint128{uint128(accountID)})
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +23,7 @@ func (b *Bank) GetBalance(ctx context.Context, accountID string) (*Balance, erro
 		return nil, err
 	}
 
-	return &Balance{
+	return &model.Balance{
 		AccountID:        accounts[0].ID.String(),
 		AvailableBalance: availableBalance,
 		AccountBalance:   accountBalance}, nil

@@ -1,9 +1,9 @@
-package ledger
+package bank
 
 import (
 	"context"
 
-	"encore.app/ledger/bank"
+	"encore.app/bank/ledger"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
@@ -12,8 +12,7 @@ const taskQueue = "authorization"
 
 //encore:service
 type Service struct {
-	bank *bank.Bank
-
+	ledger     *ledger.Ledger
 	tempClient client.Client
 	tempWorker worker.Worker
 }
@@ -21,7 +20,7 @@ type Service struct {
 // initService initializes the site service.
 // It is automatically called by Encore on service startup.
 func initService() (*Service, error) {
-	b, err := bank.InitBank()
+	s, err := ledger.Init()
 	if err != nil {
 		return nil, err
 	}
@@ -32,17 +31,17 @@ func initService() (*Service, error) {
 	}
 
 	w := worker.New(c, taskQueue, worker.Options{})
-	w.RegisterActivity(b.CreateAccount)
+	w.RegisterActivity(s.AddAccount)
 	err = w.Start()
 	if err != nil {
 		c.Close()
 		return nil, err
 	}
-	return &Service{bank: b, tempClient: c, tempWorker: w}, nil
+	return &Service{ledger: s, tempClient: c, tempWorker: w}, nil
 }
 
 func (s *Service) Shutdown(force context.Context) {
-	s.bank.Close()
+	s.ledger.Close()
 	s.tempClient.Close()
 	s.tempWorker.Stop()
 }

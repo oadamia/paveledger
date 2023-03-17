@@ -1,28 +1,15 @@
-package bank
+package ledger
 
 import (
 	"context"
 	"errors"
 
+	"encore.app/bank/model"
 	tb_types "github.com/tigerbeetledb/tigerbeetle-go/pkg/types"
 )
 
-type Transfer struct {
-	ID              string `json:"trasnfer_id"`
-	DebitAccountID  string `json:"debit_account_id"`
-	CreditAccountID string `json:"credit_account_id"`
-	PendingID       string `json:"pending_id"`
-	Ledger          uint32 `json:"ledger"`
-	Code            uint16 `json:"code"`
-	Amount          uint64 `json:"amount"`
-	IsLinked        bool   `json:"is_linked"`
-	IsPending       bool   `json:"is_pending_trasnfer"`
-	IsPostPending   bool   `json:"is_post_pending_id"`
-	IsVoidPending   bool   `json:"is_void_pending_id"`
-}
-
-func (b *Bank) CreateTransfer(ctx context.Context, t *Transfer) error {
-	res, err := b.tbClient.CreateTransfers([]tb_types.Transfer{tbTransferFrom(*t)})
+func (l *Ledger) AddTransfer(ctx context.Context, t *model.Transfer) error {
+	res, err := l.client.CreateTransfers([]tb_types.Transfer{tbTransferFrom(*t)})
 	if err != nil {
 		return err
 	}
@@ -34,7 +21,21 @@ func (b *Bank) CreateTransfer(ctx context.Context, t *Transfer) error {
 	return nil
 }
 
-func tbTransferFrom(t Transfer) tb_types.Transfer {
+func (l *Ledger) AddPendingTransfer(ctx context.Context, t *model.Authorization) error {
+
+	// res, err := l.client.CreateTransfers([]tb_types.Transfer{tbTransferFrom(*t)})
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if len(res) > 0 && res[0].Result != tb_types.TransferOK {
+	// 	return errors.New(res[0].Result.String())
+	// }
+
+	return nil
+}
+
+func tbTransferFrom(t model.Transfer) tb_types.Transfer {
 	flag := tb_types.TransferFlags{
 		Linked:              t.IsLinked,
 		Pending:             t.IsPending,

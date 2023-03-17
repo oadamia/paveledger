@@ -1,0 +1,24 @@
+package ledger
+
+import (
+	"log"
+
+	tb "github.com/tigerbeetledb/tigerbeetle-go"
+)
+
+type Ledger struct {
+	client tb.Client
+}
+
+func Init() (*Ledger, error) {
+	c, err := tb.NewClient(0, []string{"3000"}, 1)
+	if err != nil {
+		log.Printf("Error creating client: %s", err)
+		return nil, err
+	}
+	return &Ledger{client: c}, nil
+}
+
+func (l *Ledger) Close() {
+	l.client.Close()
+}

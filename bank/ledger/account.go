@@ -1,23 +1,15 @@
-package bank
+package ledger
 
 import (
 	"context"
 	"errors"
 
+	"encore.app/bank/model"
 	tb_types "github.com/tigerbeetledb/tigerbeetle-go/pkg/types"
 )
 
-type Account struct {
-	ID              string `json:"account_id"`
-	Ledger          uint32 `json:"ledger"`
-	Code            uint16 `json:"code"`
-	IsLinked        bool   `json:"is_linked"`
-	IsDebitBalance  bool   `json:"is_debit_balance"`
-	IsCreditBalance bool   `json:"is_credit_balance"`
-}
-
-func (b *Bank) GetAccount(ctx context.Context, accountID string) (*Account, error) {
-	tbAccounts, err := b.tbClient.LookupAccounts([]tb_types.Uint128{uint128(accountID)})
+func (l *Ledger) GetAccount(ctx context.Context, accountID string) (*model.Account, error) {
+	tbAccounts, err := l.client.LookupAccounts([]tb_types.Uint128{uint128(accountID)})
 	if err != nil {
 		return nil, err
 	}
@@ -29,8 +21,8 @@ func (b *Bank) GetAccount(ctx context.Context, accountID string) (*Account, erro
 	return accountFrom(tbAccounts[0]), nil
 }
 
-func (b *Bank) CreateAccount(ctx context.Context, a *Account) error {
-	res, err := b.tbClient.CreateAccounts([]tb_types.Account{tbAccountFrom(*a)})
+func (s *Ledger) AddAccount(ctx context.Context, a *model.Account) error {
+	res, err := s.client.CreateAccounts([]tb_types.Account{tbAccountFrom(*a)})
 	if err != nil {
 		return err
 	}
@@ -42,8 +34,8 @@ func (b *Bank) CreateAccount(ctx context.Context, a *Account) error {
 	return nil
 }
 
-func accountFrom(a tb_types.Account) *Account {
-	return &Account{
+func accountFrom(a tb_types.Account) *model.Account {
+	return &model.Account{
 		ID:              a.ID.String(),
 		Ledger:          a.Ledger,
 		Code:            a.Code,
@@ -53,7 +45,7 @@ func accountFrom(a tb_types.Account) *Account {
 	}
 }
 
-func tbAccountFrom(a Account) tb_types.Account {
+func tbAccountFrom(a model.Account) tb_types.Account {
 	flag := tb_types.AccountFlags{
 		Linked:                     a.IsLinked,
 		DebitsMustNotExceedCredits: a.IsDebitBalance,
