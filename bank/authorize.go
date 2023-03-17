@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"encore.app/bank/model"
 	"go.temporal.io/api/enums/v1"
@@ -39,7 +38,6 @@ func (s *Service) CreateAuthorization(ctx context.Context, auth *model.Authoriza
 		}
 	}
 
-	auth.Timestamp = time.Now().Unix()
 	return s.client.SignalWorkflow(context.Background(), workflowID, "", AUTHORIZATION_CHANNEL, auth)
 }
 

@@ -23,8 +23,6 @@ type Transfer struct {
 	DebitAccountID  string `json:"debit_account_id"`
 	CreditAccountID string `json:"credit_account_id"`
 	PendingID       string `json:"pending_id" default:"0"`
-	Ledger          uint32 `json:"ledger"`
-	Code            uint16 `json:"code"`
 	Amount          uint64 `json:"amount"`
 	IsLinked        bool   `json:"is_linked" default:"false"`
 	IsPending       bool   `json:"is_pending_trasnfer" default:"false"`
@@ -35,7 +33,6 @@ type Transfer struct {
 type Authorization struct {
 	AccountID string `json:"account_id"`
 	Amount    uint64 `json:"amount"`
-	Timestamp int64
 	PendingID string
 }
 
