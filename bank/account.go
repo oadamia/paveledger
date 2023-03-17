@@ -26,6 +26,13 @@ func (s *Service) CreateAccount(ctx context.Context, a *model.Account) error {
 	return s.ledger.AddAccount(ctx, a)
 }
 
+// GetBalance get balance information from bank
+//
+//encore:api public path=/balances/:accountID
+func (s *Service) GetBalance(ctx context.Context, accountID string) (*model.Balance, error) {
+	return s.ledger.GetBalance(ctx, accountID)
+}
+
 func validateAccount(a model.Account) error {
 	if a.IsCreditBalance == a.IsDebitBalance {
 		return errors.New("credit and debit balance flag is equal")
